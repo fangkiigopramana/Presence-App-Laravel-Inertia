@@ -7,34 +7,46 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
 import SelectBox from '@/Components/SelectBox';
 
-export default function Create({auth, users}) {
-    const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
-        name: "",
-        email: "",
-        role: 'student',
+export default function Form({auth, user, role, form}) {
+    const { data, setData, post, patch, errors, processing, recentlySuccessful } = useForm({
+        name: user?.name || "",
+        email: user?.email || "",
+        role: role || "",
         password: "",
         passwordConfirm: "",
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('users.store', {
-            preserveScroll: true,
-            onSuccess: () => {
-                
-                alert("user Created");
-            },
-            onErrror: (errors) => {
-                console.log(errors);
-            },
-        }));
+
+        if (form === 'Create') {   
+            post(route('users.store', {
+                preserveScroll: true,
+                onSuccess: () => {
+                    alert("user Created");
+                },
+                onErrror: (errors) => {
+                    console.log(errors);
+                },
+            }));
+        } else if (form === 'Edit') {
+            patch(route('users.update', user.id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    alert("user Updated");
+                },
+                onErrror: (errors) => {
+                    console.log(errors);
+                },
+            });
+        }
     };
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Create User</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">{form} User</h2>}
         >
-            <Head title="Profile" />
+            <Head title={form + ' User'} />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -84,9 +96,10 @@ export default function Create({auth, users}) {
                                 <div>
                                     <InputLabel htmlFor="role" value="Role" />
                                     <SelectBox
-                                        id={"selectRole"}
+                                        id={"role"}
                                         className="mt-1 block w-full"
                                         onChange={(e) => setData("role", e.target.value)}
+                                        currentValue={data.role}
                                         required
                                         options={[
                                             {
@@ -101,41 +114,47 @@ export default function Create({auth, users}) {
                                     />
                                     <InputError className="mt-2" message={errors.email} />
                                 </div>
+                                
+                                {form !== 'Edit' && (
+                                    <>
+                                    <div>
+                                        <InputLabel htmlFor="password" value="Password" />
 
-                                <div>
-                                    <InputLabel htmlFor="password" value="Password" />
+                                        <TextInput
+                                            id="password"
+                                            type="password"
+                                            className="mt-1 block w-full"
+                                            value={data.password}
+                                            onChange={(e) => setData('password', e.target.value)}
+                                            required
+                                            autoComplete="password"
+                                        />
 
-                                    <TextInput
-                                        id="password"
-                                        type="password"
-                                        className="mt-1 block w-full"
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        required
-                                        autoComplete="password"
-                                    />
+                                        <InputError className="mt-2" message={errors.email} />
+                                    </div>
 
-                                    <InputError className="mt-2" message={errors.email} />
-                                </div>
+                                    <div>
+                                        <InputLabel htmlFor="passwordConfirm" value="Password Confirm" />
 
-                                <div>
-                                    <InputLabel htmlFor="passwordConfirm" value="Password Confirm" />
+                                        <TextInput
+                                            id="passwordConfirm"
+                                            type="password"
+                                            className="mt-1 block w-full"
+                                            value={data.passwordConfirm}
+                                            onChange={(e) => setData('passwordConfirm', e.target.value)}
+                                            required
+                                            autoComplete="password"
+                                        />
 
-                                    <TextInput
-                                        id="passwordConfirm"
-                                        type="password"
-                                        className="mt-1 block w-full"
-                                        value={data.passwordConfirm}
-                                        onChange={(e) => setData('passwordConfirm', e.target.value)}
-                                        required
-                                        autoComplete="password"
-                                    />
-
-                                    <InputError className="mt-2" message={errors.email} />
-                                </div>
+                                        <InputError className="mt-2" message={errors.email} />
+                                    </div>
+                                    </>
+                                )}
 
                                 <div className="flex items-center gap-4">
-                                    <PrimaryButton disabled={processing}>Submit</PrimaryButton>
+                                    <PrimaryButton disabled={processing}>
+                                        {form !== 'Create' ? 'Update' : 'Create'}
+                                    </PrimaryButton>
 
                                     <Transition
                                         show={recentlySuccessful}
